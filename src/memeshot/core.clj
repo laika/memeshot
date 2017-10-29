@@ -1,26 +1,40 @@
 (ns memeshot.core
+  (:require [mikera.image.core :refer :all])
   (:gen-class))
 
-;; This is where we get the screen size for our shot
-(def ge (java.awt.GraphicsEnvironment/getLocalGraphicsEnvironment))
-(def screens (.getScreenDevices ge))
-(defn get-bounds [screen]
+(def ge
+  "Graphics environment, lets us get screen info later"
+  (java.awt.GraphicsEnvironment/getLocalGraphicsEnvironment))
+
+(def screens
+  "Grab every usable screen"
+  (.getScreenDevices ge))
+
+(defn get-bounds
+  "Create an x-y map of screen's dimensions"
+  [screen]
   (let [dimensions (fn [rect]
                      (hash-map :x (.getWidth rect) :y (.getHeight rect)))]
     (dimensions (.getBounds (.getDefaultConfiguration screen)))))
+
 (def bounds
-  (let [sum (apply merge-with + (map get-bounds screens))]
-    (hash-map :y (int (/ (:y sum) (count screens))) :x (int (:x sum)))))
+  "Map and sum get-bounds over each screen we find"
+  (let [sum (apply merge-with + (map get-bounds screens))
+        x (int (:x sum))
+        y (-> (sort-by :y > (map get-bounds screens)) first :y)]
+    (hash-map :x (int x)
+              :y (int y))))
+
 (def rectangle
+  "Define a rectangle the size of our screens"
   (let [x (:x bounds)
         y (:y bounds)]
-    (java.awt.Rectangle. x y)))
-;;Get our robot out to do slave labor
-(def robot (java.awt.Robot.))
-;;Img
-(def img (.createScreenCapture robot rectangle))
+    (java.awt.Rectangle. 0 0 x y)))
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  )
+(def robot
+  "Get a robot instance"
+  (java.awt.Robot.))
+
+(def img
+  "Create an image of all our screens"
+  (.createScreenCapture robot rectangle))
