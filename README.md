@@ -1,6 +1,6 @@
 # memeshot
 
-FIXME: description
+If you like memes this is the place for you
 
 ## Installation
 
